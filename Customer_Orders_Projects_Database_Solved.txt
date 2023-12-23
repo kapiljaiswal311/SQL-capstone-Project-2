@@ -1,0 +1,270 @@
+Capstone
+
+
+Task 1
+----------------------------------------
+
+SELECT * FROM Customers;
+
+----------------------------------------
+SELECT Name, Email
+FROM Customers
+WHERE Name LIKE 'J%';
+
+-----------------------------------------
+
+SELECT OrderID, ProductName, Quantity
+FROM Orders;
+
+----------------------------------------
+
+SELECT SUM(Quantity) as TotalQuantity
+FROM Orders;
+
+-----------------------------------------
+
+SELECT DISTINCT C.Name
+FROM Customers C
+INNER JOIN Orders O ON C.CustomerID = O.CustomerID;
+
+-----------------------------------------
+
+SELECT *
+FROM Products
+WHERE Price > 10.00;
+
+-----------------------------------------
+
+SELECT C.Name, O.OrderDate
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+WHERE O.OrderDate >= '2023-07-05';
+
+-----------------------------------------
+
+SELECT AVG(Price) as AveragePrice
+FROM Products;
+
+-----------------------------------------
+
+SELECT C.Name, SUM(O.Quantity) as TotalQuantity
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+GROUP BY C.Name;
+
+----------------------------------------------
+
+SELECT P.*
+FROM Products P
+LEFT JOIN Orders O ON P.ProductName = O.ProductName
+WHERE O.OrderID IS NULL;
+
+-----------------------------------------
+
+Task 2
+
+----------------------------------------------
+
+SELECT C.Name, SUM(O.Quantity) as TotalQuantity
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+GROUP BY C.Name
+ORDER BY TotalQuantity DESC
+LIMIT 5;
+
+----------------------------------------
+
+SELECT Category, AVG(Price) as AveragePrice
+FROM Products
+GROUP BY Category;
+
+--------------------------------------
+
+SELECT C.Name
+FROM Customers C
+LEFT JOIN Orders O ON C.CustomerID = O.CustomerID
+WHERE O.CustomerID IS NULL;
+
+---------------------------------------------
+SELECT O.OrderID, O.ProductName, O.Quantity
+FROM Orders O
+JOIN Customers C ON O.CustomerID = C.CustomerID
+WHERE C.Name LIKE 'M%';
+
+--------------------------------------------
+
+SELECT SUM(P.Price * O.Quantity) as TotalRevenue
+FROM Products P
+JOIN Orders O ON P.ProductName = O.ProductName;
+
+---------------------------------------------
+
+SELECT C.Name, SUM(P.Price * O.Quantity) as TotalRevenue
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+JOIN Products P ON O.ProductName = P.ProductName
+GROUP BY C.Name;
+
+------------------------------------------------
+
+SELECT C.Name
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+JOIN Products P ON O.ProductName = P.ProductName
+GROUP BY C.Name
+HAVING COUNT(DISTINCT P.Category) = (SELECT COUNT(DISTINCT Category) FROM Products);
+
+-----------------------------------------------
+
+SELECT C.Name
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+WHERE EXISTS (
+    SELECT 1
+    FROM Orders O2
+    WHERE O2.CustomerID = O.CustomerID
+    AND O2.OrderDate = DATE_ADD(O.OrderDate, INTERVAL 1 DAY)
+);
+
+----------------------------------------------
+
+SELECT ProductName, AVG(Quantity) as AverageQuantity
+FROM Orders
+GROUP BY ProductName
+ORDER BY AverageQuantity DESC
+LIMIT 3;
+
+---------------------------------------
+
+SELECT COUNT(*) * 100 / (SELECT COUNT(*) FROM Orders) as Percentage
+FROM Orders
+WHERE Quantity > (SELECT AVG(Quantity) FROM Orders);
+
+--------------------------------------------
+
+Task 3
+
+------------------------------------------
+
+SELECT C.Name
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+JOIN Products P ON O.ProductName = P.ProductName
+GROUP BY C.Name
+HAVING COUNT(DISTINCT P.ProductName) = (SELECT COUNT(*) FROM Products);
+
+--------------------------------------------
+
+SELECT P.ProductName
+FROM Products P
+JOIN Orders O ON P.ProductName = O.ProductName
+GROUP BY P.ProductName
+HAVING COUNT(DISTINCT O.CustomerID) = (SELECT COUNT(*) FROM Customers);
+
+-------------------------------------------
+
+SELECT DATE_FORMAT(OrderDate, '%Y-%m') as Month, SUM(Price * Quantity) as TotalRevenue
+FROM Orders O
+JOIN Products P ON O.ProductName = P.ProductName
+GROUP BY DATE_FORMAT(OrderDate, '%Y-%m');
+
+--------------------------------------------
+
+SELECT P.ProductName
+FROM Products P
+JOIN Orders O ON P.ProductName = O.ProductName
+GROUP BY P.ProductName
+HAVING COUNT(DISTINCT O.CustomerID) > (SELECT COUNT(*) * 0.5 FROM Customers);
+
+---------------------------------------------
+
+SELECT C.Name, SUM(P.Price * O.Quantity) as TotalSpent
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+JOIN Products P ON O.ProductName = P.ProductName
+GROUP BY C.Name
+ORDER BY TotalSpent DESC
+LIMIT 5;
+
+-------------------------------------------
+
+SELECT C.Name, O.OrderID, O.Quantity, 
+       SUM(O.Quantity) OVER (PARTITION BY O.CustomerID ORDER BY O.OrderID) as RunningTotal
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID;
+
+------------------------------------------
+
+SELECT C.Name, O.OrderID, O.OrderDate
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+WHERE O.OrderID IN (
+    SELECT TOP 3 OrderID
+    FROM Orders
+    WHERE CustomerID = C.CustomerID
+    ORDER BY OrderDate DESC
+);
+
+---------------------------------------------
+
+SELECT C.Name, SUM(P.Price * O.Quantity) as TotalRevenue
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+JOIN Products P ON O.ProductName = P.ProductName
+WHERE O.OrderDate >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+GROUP BY C.Name;
+
+----------------------------------------------
+
+SELECT C.Name
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+JOIN Products P ON O.ProductName = P.ProductName
+GROUP BY C.CustomerID
+HAVING COUNT(DISTINCT P.Category) >= 2;
+
+-------------------------------------------
+
+SELECT C.Name, AVG(P.Price * O.Quantity) as AverageRevenue
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+JOIN Products P ON O.ProductName = P.ProductName
+GROUP BY C.Name;
+
+------------------------------------------
+
+SELECT C.Name
+FROM Customers C
+WHERE NOT EXISTS (
+    SELECT DISTINCT DATE_FORMAT(OrderDate, '%Y-%m')
+    FROM Orders O
+    WHERE YEAR(OrderDate) = 2023
+    EXCEPT
+    SELECT DISTINCT DATE_FORMAT(OrderDate, '%Y-%m')
+    FROM Orders O2
+    WHERE O2.CustomerID = C.CustomerID
+);
+
+------------------------------------------
+
+SELECT C.Name
+FROM Customers C
+JOIN Orders O ON C.CustomerID = O.CustomerID
+JOIN Products P ON O.ProductName = P.ProductName
+WHERE EXISTS (
+    SELECT 1
+    FROM Orders O2
+    WHERE O2.CustomerID = O.CustomerID
+    AND O2.ProductName = 'Product A'
+    AND DATE_ADD(O.OrderDate, INTERVAL 1 MONTH) = O2.OrderDate
+);
+
+-------------------------------------------
+
+SELECT DISTINCT O.ProductName
+FROM Orders O
+WHERE O.CustomerID = 1
+GROUP BY O.ProductName
+HAVING COUNT(*) >= 2;
+
+---------------------------------------------
